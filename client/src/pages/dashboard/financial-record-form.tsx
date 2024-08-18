@@ -1,89 +1,114 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState } from "react";
+import { useUser } from "@clerk/clerk-react";
+import { useFinancialRecords } from "../../contexts/financial-record-context";
 
-interface FormData {
-  description: string;
-  amount: number | string;
-  type: 'income' | 'expense';
-  category: string;
-  date: string;
-}
+export const FinancialRecordForm = () => {
+  const [description, setDescription] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
+  const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const { addRecord } = useFinancialRecords();
+  const { user } = useUser();
 
-function FinancialRecordForm() {
-  const [formData, setFormData] = useState<FormData>({
-    description: '',
-    amount: '',
-    type: 'income',
-    category: 'entertainment',
-    date: ''
-  });
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+    const newRecord = {
+      userId: user?.id ?? "",
+      date: new Date(),
+      description: description,
+      amount: parseFloat(amount),
+      category: category,
+      paymentMethod: paymentMethod,
+    };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log('Form Data:', formData);
-    // You can handle form submission logic here, like sending data to a server
+    addRecord(newRecord);
+    setDescription("");
+    setAmount("");
+    setCategory("");
+    setPaymentMethod("");
   };
 
   return (
-    <div>
-      <h4>Financial Record Form</h4>
+    <div className="bg-white p-6 rounded-lg shadow-lg">
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>Description:</label>
-          <input
-            type="text"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
+        <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
+          Add New Financial Record
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Description Input */}
+          <div className="mb-4 md:mb-0">
+            <label className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <input
+              type="text"
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="Enter description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          {/* Amount Input */}
+          <div className="mb-4 md:mb-0">
+            <label className="block text-sm font-medium text-gray-700">Amount</label>
+            <input
+              type="number"
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              placeholder="Enter amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+
+          {/* Category Selection */}
+          <div className="mb-4 md:mb-0">
+            <label className="block text-sm font-medium text-gray-700">Category</label>
+            <select
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+            >
+              <option value="">Select a Category</option>
+              <option value="Food">Food</option>
+              <option value="Rent">Rent</option>
+              <option value="Salary">Salary</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Payment Method Selection */}
+          <div className="mb-6 md:mb-0">
+            <label className="block text-sm font-medium text-gray-700">Payment Method</label>
+            <select
+              required
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+            >
+              <option value="">Select a Payment Method</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Cash">Cash</option>
+              <option value="Bank Transfer">Bank Transfer</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label>Amount:</label>
-          <input
-            type="number"
-            name="amount"
-            value={formData.amount}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div>
-          <label>Type:</label>
-          <select name="type" value={formData.type} onChange={handleChange}>
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </select>
-        </div>
-        <div>
-          <label>Category:</label>
-          <select name="category" value={formData.category} onChange={handleChange}>
-            <option value="entertainment">Entertainment</option>
-            <option value="food">Food</option>
-            <option value="rent">Rent</option>
-            <option value="salary">Salary</option>
-            <option value="utility">Utility</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div>
-          <label>Date:</label>
-          <input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <button type="submit">Add Record</button>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="w-full bg-blue-500 text-white font-semibold py-2 px-4 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mt-6"
+        >
+          Add Record
+        </button>
       </form>
     </div>
   );
-}
-
-export default FinancialRecordForm;
+};
